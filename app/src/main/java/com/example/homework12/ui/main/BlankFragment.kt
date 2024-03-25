@@ -27,12 +27,13 @@ class BlankFragment : Fragment() {
 
     private var _binding: FragmentBlankBinding? = null
     private val binding get() = _binding!!
+    private val viewModel: BlankViewModel by viewModels{MainViewModelFactory()}
     private lateinit var filterButton: ImageButton
     private lateinit var searchButton: ImageButton
     private lateinit var progress: ProgressBar
     private lateinit var search: TextInputEditText
     private lateinit var inputLayoutSearch: TextInputLayout
-    private val viewModel: BlankViewModel by viewModels{MainViewModelFactory()}
+
 
     companion object {
         fun newInstance() = BlankFragment()
@@ -53,39 +54,11 @@ class BlankFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        binding.viewModel = viewModel
+        binding.lifecycleOwner = viewLifecycleOwner
+
         searchButton.isEnabled = false
 
-        search.addTextChangedListener {
-
-            searchFieldValidation(search.text)
-        }
-        searchButton.setOnClickListener {
-            val searchString = search.text.toString()
-            viewModel.onClickSearch(searchString)
-        }
-        viewLifecycleOwner.lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.stateSearch.collect { state ->
-                    when (state) {
-                        StateSearch.Loading -> {
-                            progress.isVisible = true
-                            filterButton.isEnabled = false
-                            searchButton.isEnabled = false
-                        }
-
-                        StateSearch.Success -> {
-                            progress.isVisible = false
-                            filterButton.isEnabled = true
-                        }
-
-                        is StateSearch.Error -> {
-                            progress.isVisible = false
-
-                        }
-                    }
-                }
-            }
-        }
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.error.collect { message ->
@@ -100,14 +73,5 @@ class BlankFragment : Fragment() {
         _binding = null
     }
 
-    private fun searchFieldValidation(text: Editable?) {
-        val length = text?.length
 
-        if (length != null && length > 3) {
-            searchButton.isEnabled = true
-        } else {
-            searchButton.isEnabled = false
-            Log.d("MaimViewModel", "request length must be more than 3 characters")
-        }
-    }
 }
