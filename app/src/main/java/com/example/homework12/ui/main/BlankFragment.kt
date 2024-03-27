@@ -21,19 +21,10 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.launch
 
-private const val TAG = "BlankFragment"
-
 class BlankFragment : Fragment() {
-
     private var _binding: FragmentBlankBinding? = null
     private val binding get() = _binding!!
     private val viewModel: BlankViewModel by viewModels{MainViewModelFactory()}
-    private lateinit var filterButton: ImageButton
-    private lateinit var searchButton: ImageButton
-    private lateinit var progress: ProgressBar
-    private lateinit var search: TextInputEditText
-    private lateinit var inputLayoutSearch: TextInputLayout
-
 
     companion object {
         fun newInstance() = BlankFragment()
@@ -44,11 +35,6 @@ class BlankFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentBlankBinding.inflate(inflater, container, false)
-        filterButton = binding.filterButton
-        searchButton = binding.searchButton
-        progress = binding.progress
-        search = binding.search
-        inputLayoutSearch = binding.InputLayoutSearch
         return binding.root
     }
 
@@ -56,8 +42,6 @@ class BlankFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.viewModel = viewModel
         binding.lifecycleOwner = viewLifecycleOwner
-
-        searchButton.isEnabled = false
 
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -72,6 +56,4 @@ class BlankFragment : Fragment() {
         super.onDestroy()
         _binding = null
     }
-
-
 }

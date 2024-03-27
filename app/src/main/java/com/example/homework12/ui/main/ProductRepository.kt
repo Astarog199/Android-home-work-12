@@ -5,7 +5,7 @@ import java.lang.Exception
 
 class ProductRepository {
 
-    suspend fun getProduct(arg: String):  Product? {
+    suspend fun getProduct(arg: String?):  Product? {
        delay(5000)
         return if (false){
             null
