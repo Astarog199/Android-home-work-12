@@ -1,18 +1,22 @@
 package com.example.homework12.ui.main
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
-private const val TAG = "MainViewModel"
 
+
+@OptIn(FlowPreview::class)
 class BlankViewModel(private val repository: ProductRepository) : ViewModel() {
 
     private val _stateSearch: MutableStateFlow<StateSearch> = MutableStateFlow(StateSearch.Success)
@@ -20,28 +24,36 @@ class BlankViewModel(private val repository: ProductRepository) : ViewModel() {
 
     private val _error = Channel<String>()
     val error = _error.receiveAsFlow()
+    private val editText = MutableStateFlow("")
+
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
+            editText.debounce(1000L).onEach {
+                if (it.length > 3) {
+                    search(it)
+                }
+            }.collect()
+        }
+    }
 
 
-    @OptIn(FlowPreview::class)
     fun searchFieldValidation(stringSearch: String?) {
-            val length = stringSearch?.length
-            if (length != null && length > 3) {
-                viewModelScope.launch {
-                    if (_stateSearch.value != StateSearch.Loading) {
-                        _stateSearch.value = StateSearch.Loading
-                        try {
-                            flow {
-                                emit(stringSearch)
-                            }.debounce(300).collect{
-                                repository.getProduct(it)
-                                _stateSearch.value = StateSearch.Success
-                            }
-                        } catch (e: Exception) {
-                            _error.send(e.message.toString())
-                            _stateSearch.value = StateSearch.Error(null)
-                        }
-                    }
+        if (stringSearch != null) editText.value = stringSearch
+    }
+
+    private fun search(stringSearch: String?) {
+        Log.d("MainBlankViewModel", "stringSearch: $stringSearch")
+        viewModelScope.launch {
+            if (_stateSearch.value != StateSearch.Loading) {
+                _stateSearch.value = StateSearch.Loading
+                try {
+                        repository.getProduct(stringSearch)
+                        _stateSearch.value = StateSearch.Success
+                } catch (e: Exception) {
+                    _error.send(e.message.toString())
+                    _stateSearch.value = StateSearch.Error(null)
                 }
             }
         }
+    }
 }
